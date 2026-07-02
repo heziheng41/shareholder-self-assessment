@@ -3,52 +3,470 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>股东出资自测互动版</title>
-    <meta http-equiv="refresh" content="0; url=https://heziheng41.github.io/shareholder-self-assessment/股东出资自测互动版.html">
+    <title>被债权人追责？股东自测是否承担责任</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
             color: #fff;
+            padding: 20px;
+            line-height: 1.6;
         }
-        .loading {
+        .container { max-width: 900px; margin: 0 auto; }
+        .title {
+            text-align: center;
             font-size: 24px;
+            font-weight: bold;
+            color: #ffd93d;
+            text-shadow: 0 0 15px #ffd93d;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            border: 3px solid #ffd93d;
+        }
+        .section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid #00ffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed #00ffff;
+        }
+        .section-number {
+            width: 36px; height: 36px;
+            background: #ff6b6b;
+            border: 2px solid #fff;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            color: #fff;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
             color: #00ffff;
-            text-shadow: 0 0 20px #00ffff;
+            text-shadow: 0 0 8px #00ffff;
         }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #00ffff;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        .question-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #4ecdc4;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .question-text {
+            font-size: 16px;
+            color: #fff;
+            font-weight: bold;
         }
-        .fallback {
-            margin-top: 30px;
+        .options { display: grid; gap: 12px; }
+        .option-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #6c5ce7;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .option-card:hover {
+            border-color: #00ffff;
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.3);
+        }
+        .option-card.active {
+            border-color: #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+        }
+        .option-text {
             font-size: 14px;
-            color: #ccc;
+            color: #fff;
+            line-height: 1.6;
         }
-        .fallback a {
+        .result-box {
+            margin-top: 15px;
+            padding: 18px;
+            border-radius: 8px;
+            animation: fadeIn 0.4s ease-out;
+            display: none;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .result-box.show { display: block; }
+        .result-safe {
+            background: rgba(0, 255, 0, 0.15);
+            border: 2px solid #00ff00;
+        }
+        .result-safe .result-title { color: #00ff00; }
+        .result-lawyer {
+            background: rgba(255, 255, 0, 0.15);
+            border: 2px solid #ffd93d;
+        }
+        .result-lawyer .result-title { color: #ffd93d; }
+        .result-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px currentColor;
+        }
+        .result-desc {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.6;
+        }
+        .highlight {
+            color: #ffd93d;
+            font-weight: bold;
+            text-shadow: 0 0 8px #ffd93d;
+        }
+        .jump-link {
+            color: #00ffff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .jump-link:hover {
+            text-shadow: 0 0 10px #00ffff;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        .section.collapsed {
+            max-height: 80px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .expand-btn {
+            float: right;
+            font-size: 20px;
+            color: #00ffff;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .expand-btn.rotated { transform: rotate(180deg); }
+        .legal-note {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 8px;
+        }
+        .qr-section {
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid #ffd93d;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255, 217, 61, 0.2);
+        }
+        .qr-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffd93d;
+            margin-bottom: 15px;
+        }
+        .qr-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .qrcode {
+            width: 150px;
+            height: 150px;
+        }
+        .qr-desc {
+            font-size: 12px;
+            color: #ccc;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+        .qr-link {
             color: #00ffff;
             text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <div class="spinner"></div>
-    <div class="loading">正在跳转...</div>
-    <div class="fallback">
-        如果没有自动跳转，请点击 <a href="https://heziheng41.github.io/shareholder-self-assessment/股东出资自测互动版.html">这里</a>
+    <div class="container">
+        <div class="title">被债权人追责？股东自测是否承担责任</div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress" style="width: 16.67%"></div>
+        </div>
+
+        <div class="section" id="section1">
+            <div class="section-header">
+                <div class="section-number">1</div>
+                <div class="section-title">测试目前持有出资额范围内我的责任</div>
+                <span class="expand-btn" onclick="toggleSection('section1')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">我目前持有的出资额属于以下哪种情况？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result1-1')">
+                    <div class="option-text">✅ 我已经足额货币实缴，或前手股东已经足额货币实缴</div>
+                    <div class="result-box result-safe" id="result1-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在1范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result1-2')">
+                    <div class="option-text">📄 我或前手股东已经全部或部分债权/股权/知识产权等非货币实缴</div>
+                    <div class="result-box" id="result1-2">
+                        <div class="result-title">🔄 跳转测试</div>
+                        <div class="result-desc">请跳转到 <span class="jump-link" onclick="scrollToSection('section4')">测试4：非货币财产出资是否足额</span></div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result1-3')">
+                    <div class="option-text">❌ 我或前手股东全部或部分没实缴</div>
+                    <div class="result-box" id="result1-3">
+                        <div class="result-title">🔄 跳转测试</div>
+                        <div class="result-desc">请跳转到 <span class="jump-link" onclick="scrollToSection('section5')">测试5：债务是否形成、到期</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section2">
+            <div class="section-header">
+                <div class="section-number">2</div>
+                <div class="section-title">测试在公司减资额范围内我的责任</div>
+                <span class="expand-btn" onclick="toggleSection('section2')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">公司减资时我的情况是？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result2-1')">
+                    <div class="option-text">✅ 公司没减资</div>
+                    <div class="result-box result-safe" id="result2-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在2范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result2-2')">
+                    <div class="option-text">✅ 公司减资时我不是股东</div>
+                    <div class="result-box result-safe" id="result2-2">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在2范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result2-3')">
+                    <div class="option-text">⚠️ 公司减资时我是股东</div>
+                    <div class="result-box" id="result2-3">
+                        <div class="result-title">🔄 跳转测试</div>
+                        <div class="result-desc">请跳转到 <span class="jump-link" onclick="scrollToSection('section5')">测试5：债务是否形成、到期</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section3">
+            <div class="section-header">
+                <div class="section-number">3</div>
+                <div class="section-title">测试我转出的出资额范围内我的责任</div>
+                <span class="expand-btn" onclick="toggleSection('section3')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">我转出股权的情况是？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result3-1')">
+                    <div class="option-text">✅ 我没有转出过股权</div>
+                    <div class="result-box result-safe" id="result3-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在3范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result3-2')">
+                    <div class="option-text">✅ 我已经足额货币实缴，或后手股东已经足额货币实缴</div>
+                    <div class="result-box result-safe" id="result3-2">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在3范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result3-3')">
+                    <div class="option-text">📄 我或后手股东已经全部或部分债权/股权/知识产权等非货币实缴</div>
+                    <div class="result-box" id="result3-3">
+                        <div class="result-title">🔄 跳转测试</div>
+                        <div class="result-desc">请跳转到 <span class="jump-link" onclick="scrollToSection('section4')">测试4：非货币财产出资是否足额</span></div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result3-4')">
+                    <div class="option-text">❌ 我或后手股东全部或部分没实缴</div>
+                    <div class="result-box" id="result3-4">
+                        <div class="result-title">🔄 跳转测试</div>
+                        <div class="result-desc">请跳转到 <span class="jump-link" onclick="scrollToSection('section5')">测试5：债务是否形成、到期</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section4">
+            <div class="section-header">
+                <div class="section-number">4</div>
+                <div class="section-title">测试非货币财产出资是否足额</div>
+                <span class="expand-btn" onclick="toggleSection('section4')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">关于非货币财产出资，我的情况是？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result4-1')">
+                    <div class="option-text">✅ 我很确定非货币财产价值评估是公允的，我把财产从我名下转到公司名下了</div>
+                    <div class="result-box result-safe" id="result4-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在1/2/3范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result4-2')">
+                    <div class="option-text">❓ 我不确定/我不知道/我不懂</div>
+                    <div class="result-box result-lawyer" id="result4-2">
+                        <div class="result-title">📞 建议咨询</div>
+                        <div class="result-desc">带上评估报告、验资报告、权属移转证明，<span class="highlight">找海涵律师</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section5">
+            <div class="section-header">
+                <div class="section-number">5</div>
+                <div class="section-title">测试债务是否形成、到期</div>
+                <span class="expand-btn" onclick="toggleSection('section5')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">关于债务状态，我的判断是？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result5-1')">
+                    <div class="option-text">✅ 我很确定债务不成立</div>
+                    <div class="result-box result-safe" id="result5-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">在1/2/3范围内，我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result5-2')">
+                    <div class="option-text">⏳ 我很确定债务成立但没有到期</div>
+                    <div class="result-box result-safe" id="result5-2">
+                        <div class="result-title">✅ 暂时安全</div>
+                        <div class="result-desc">在1/2/3范围内，我<span class="highlight">现在还</span>不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result5-3')">
+                    <div class="option-text">❓ 我不确定/我不知道/我不懂</div>
+                    <div class="result-box result-lawyer" id="result5-3">
+                        <div class="result-title">📞 建议咨询</div>
+                        <div class="result-desc">带上合同、送货单、验收报告、支付凭证等合同履行材料，<span class="highlight">找海涵律师</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="section6">
+            <div class="section-header">
+                <div class="section-number">6</div>
+                <div class="section-title">债权人说我和公司构成"人格混同"，要我承担连带责任？</div>
+                <span class="expand-btn" onclick="toggleSection('section6')">▼</span>
+            </div>
+            <div class="question-box">
+                <div class="question-text">关于人格混同的情况，我的判断是？</div>
+            </div>
+            <div class="options">
+                <div class="option-card" onclick="selectOption(this, 'result6-1')">
+                    <div class="option-text">✅ 公司只有我一个股东，且公司每年都编制了财务报告，且有审计报告，我很确定公司财产独立于我</div>
+                    <div class="result-box result-safe" id="result6-1">
+                        <div class="result-title">✅ 安全</div>
+                        <div class="result-desc">我不用代公司对债权人还款</div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result6-2')">
+                    <div class="option-text">⚠️ 公司只有我一个股东，但公司年报没有委托审计，公司和我有混用银行账户、经营场所、一套人员班子等情况</div>
+                    <div class="result-box result-lawyer" id="result6-2">
+                        <div class="result-title">📞 建议咨询</div>
+                        <div class="result-desc"><span class="highlight">找海涵律师</span></div>
+                    </div>
+                </div>
+                <div class="option-card" onclick="selectOption(this, 'result6-3')">
+                    <div class="option-text">⚠️ 公司有2个及以上的股东，且公司和我有混用银行账户、经营场所、一套人员班子等情况</div>
+                    <div class="result-box result-lawyer" id="result6-3">
+                        <div class="result-title">📞 建议咨询</div>
+                        <div class="result-desc"><span class="highlight">找海涵律师</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="qr-section">
+            <div class="qr-title">📱 扫码分享 / 阅读原文链接</div>
+            <div class="qr-box">
+                <img class="qrcode" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://heziheng41.github.io/shareholder-self-assessment/" alt="二维码">
+            </div>
+            <div class="qr-desc">
+                在线链接：<a href="https://heziheng41.github.io/shareholder-self-assessment/" class="qr-link">https://heziheng41.github.io/shareholder-self-assessment/</a>
+            </div>
+        </div>
+
+        <div class="legal-note">
+            本自测不构成法律意见<br>
+            © 2026年7月企业法讯 | 海涵律师 股权组出品
+        </div>
     </div>
+
+    <script>
+        function selectOption(card, resultId) {
+            const options = card.parentElement.querySelectorAll('.option-card');
+            options.forEach(opt => {
+                opt.classList.remove('active');
+                const results = opt.querySelectorAll('.result-box');
+                results.forEach(r => r.classList.remove('show'));
+            });
+            card.classList.add('active');
+            const result = document.getElementById(resultId);
+            if (result) result.classList.add('show');
+        }
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const btn = section.querySelector('.expand-btn');
+            section.classList.toggle('collapsed');
+            btn.classList.toggle('rotated');
+        }
+
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.remove('collapsed');
+                section.querySelector('.expand-btn').classList.remove('rotated');
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    </script>
 </body>
 </html>
